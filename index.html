@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            text-align: center;
+            font-family: 'Arial', sans-serif;
+        }
+
+        #calendar {
+            max-width: 700px;
+            margin: 40px auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 10px;
+            border: 2px solid #ddd;
+            width: 50px; /* 고정된 크기로 조정 */
+            height: 50px; /* 고정된 크기로 조정 */
+            text-align: center;
+            vertical-align: top; /* 날짜가 정중앙에 오도록 조정 */
+            position: relative;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        #memo-container {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 40px;
+            background-color: #fff;
+            border: 2px solid #ddd;
+            z-index: 1;
+        }
+
+        #memo-container textarea {
+            width: 100%;
+            height: 100px;
+            margin-bottom: 10px;
+        }
+
+        #memo-container button {
+            background-color: #00f535;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+        }
+
+        #month-navigation {
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .memo-circle {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: #00f535;
+            margin-left: 5px;
+            position: absolute;
+            bottom: 15px; 
+            right: 44px; 
+            cursor: pointer;
+        }
+
+        h1 {
+            color: #333;
+        }
+    </style>
+    <title>캘린더 만들기</title>
+</head>
+<body>
+    <h1>CALENDAR</h1>
+    <div id="month-navigation">
+        <button onclick="prevMonth()">&#8249;</button>
+        <span id="current-month-year"></span>
+        <button onclick="nextMonth()">&#8250;</button>
+    </div>
+    <div id="calendar"></div>
+    <div id="memo-container">
+        <textarea id="memo-text" placeholder="메모를 입력하세요"></textarea>
+        <button onclick="saveMemo()">저장</button>
+    </div>
+
+    <script>
+        let currentYear, currentMonth;
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const today = new Date();
+            currentYear = today.getFullYear();
+            currentMonth = today.getMonth();
+            renderCalendar();
+
+            document.getElementById('calendar').addEventListener('click', function (event) {
+                if (event.target.classList.contains('memo-circle')) {
+                    showMemo(event.target.dataset.date);
+                } else if (event.target.tagName === 'TD' && event.target.dataset.date) {
+                    showMemoInput(event.target.dataset.date);
+                }
+            });
+        });
+
+        function renderCalendar() {
+            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+            document.getElementById('current-month-year').textContent = `${currentYear}년 ${currentMonth + 1}월`;
+
+            let calendarHTML = '<table>';
+            calendarHTML += '<tr><th>일</th><th>월</th><th>화</th><th>수</th><th>목</th><th>금</th><th>토</th></tr>';
+
+            for (let i = 1; i <= daysInMonth; i++) {
+                const currentDate = new Date(currentYear, currentMonth, i);
+                const dayOfWeek = currentDate.getDay();
+                const formattedDate = currentDate.toISOString().split('T')[0];
+
+                if (i === 1) {
+                    calendarHTML += '<tr>';
+                    for (let j = 0; j < dayOfWeek; j++) {
+                        calendarHTML += '<td></td>';
+                    }
+                }
+
+                calendarHTML += `<td data-date="${formattedDate}">${i}`;
+                const savedMemo = localStorage.getItem(formattedDate);
+                if (savedMemo) {
+                    calendarHTML += `<span class="memo-circle" data-date="${formattedDate}"></span>`;
+                }
+                calendarHTML += '</td>';
+
+                if (dayOfWeek === 6 && i < daysInMonth) {
+                    calendarHTML += '</tr>';
+                }
+            }
+
+            calendarHTML += '</table>';
+            document.getElementById('calendar').innerHTML = calendarHTML;
+        }
+
+        function showMemoInput(date) {
+            const memoContainer = document.getElementById('memo-container');
+            memoContainer.style.display = 'block';
+            memoContainer.dataset.date = date;
+
+            const memoText = document.getElementById('memo-text');
+            memoText.value = localStorage.getItem(date) || '';
+        }
+
+        function saveMemo() {
+            const memoContainer = document.getElementById('memo-container');
+            const date = memoContainer.dataset.date;
+            const memoText = document.getElementById('memo-text').value;
+
+            localStorage.setItem(date, memoText);
+
+            memoContainer.style.display = 'none';
+            renderCalendar();
+        }
+
+        function showMemo(date) {
+            const savedMemo = localStorage.getItem(date);
+        }
+
+        function prevMonth() {
+            if (currentMonth > 0) {
+                currentMonth--;
+            } else {
+                currentMonth = 11;
+                currentYear--;
+            }
+            renderCalendar();
+        }
+
+        function nextMonth() {
+            if (currentMonth < 11) {
+                currentMonth++;
+            } else {
+                currentMonth = 0;
+                currentYear++;
+            }
+            renderCalendar();
+        }
+    </script>
+</body>
+</html>
